@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TabStash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="1" y="1" width="8" height="8" rx="2" fill="#E8FF47" />
+            <rect
+              x="13"
+              y="1"
+              width="8"
+              height="8"
+              rx="2"
+              fill="#E8FF47"
+              opacity="0.6"
+            />
+            <rect
+              x="1"
+              y="13"
+              width="8"
+              height="8"
+              rx="2"
+              fill="#E8FF47"
+              opacity="0.6"
+            />
+            <rect
+              x="13"
+              y="13"
+              width="8"
+              height="8"
+              rx="2"
+              fill="#E8FF47"
+              opacity="0.3"
+            />
+          </svg>
+          <span class="logo-text">TabStash</span>
+        </div>
+        <div class="tab-count" id="tabCount">0 saved</div>
+      </header>
+
+      <!-- Add current tab -->
+      <div class="add-section">
+        <div class="btn-add">
+          <button class="btn-add-current" id="addCurrentTab">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 1V13M1 7H13"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            Add Current Tab
+          </button>
+          <button class="btn-add-all" id="addAllTab">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 1V13M1 7H13"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            Add All Tab
+          </button>
+        </div>
+
+        <div class="divider">or</div>
+        <div class="manual-input">
+          <input
+            type="url"
+            id="urlInput"
+            class="url-input"
+            placeholder="https://example.com"
+          />
+          <button class="btn-add-url" id="addUrlBtn" title="Add URL">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 1V13M1 7H13"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Saved URLs list -->
+      <div class="list-header" id="listHeader" style="display: none">
+        <span class="list-title">Saved Tabs</span>
+        <div class="list-actions">
+          <button class="btn-open-all" id="openAllBtn">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path
+                d="M1 6C1 3.24 3.24 1 6 1s5 2.24 5 5-2.24 5-5 5-5-2.24-5-5z"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <path
+                d="M4 6l1.5 1.5L8 4"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Open All
+          </button>
+          <button class="btn-clear-all" id="clearAllBtn">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path
+                d="M1.5 1.5l9 9M10.5 1.5l-9 9"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      <div class="url-list" id="urlList">
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <rect
+                x="4"
+                y="8"
+                width="32"
+                height="24"
+                rx="3"
+                stroke="#444"
+                stroke-width="1.5"
+              />
+              <path d="M4 14h32" stroke="#444" stroke-width="1.5" />
+              <circle cx="9" cy="11" r="1.5" fill="#444" />
+              <circle cx="14" cy="11" r="1.5" fill="#444" />
+              <circle cx="19" cy="11" r="1.5" fill="#444" />
+              <path
+                d="M13 24h14M13 28h8"
+                stroke="#444"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <p class="empty-text">No tabs saved yet</p>
+          <p class="empty-sub">Add the current tab or paste a URL above</p>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
