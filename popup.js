@@ -2,13 +2,17 @@
 //  TabStash – popup.js
 // ─────────────────────────────────────────────────
 
-const STORAGE_KEY = 'tabstash_urls';
+const URL_STORAGE_KEY = 'tabstash_urls';
+const FOLDER_STORAGE_KEY = 'tabstash_folders'
 
 // DOM refs
 const urlList = document.getElementById('urlList');
 const emptyState = document.getElementById('emptyState');
 const listHeader = document.getElementById('listHeader');
 const tabCount = document.getElementById('tabCount');
+const folderCount = document.getElementById('folderCount');
+const folderInput = document.getElementById('folderInput');
+const addFolderBtn = document.getElementById('addFolderBtn');
 const urlInput = document.getElementById('urlInput');
 const addUrlBtn = document.getElementById('addUrlBtn');
 const addCurrentBtn = document.getElementById('addCurrentTab');
@@ -16,24 +20,32 @@ const addAllBtn = document.getElementById('addAllTab');
 const openAllBtn = document.getElementById('openAllBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const toast = document.getElementById('toast');
+const selected = document.getElementById("selected");
+const dropdown = document.getElementById("dropdown");
+const btnRemoveFolder = document.getElementById("btnRemoveFolder")
 
 let savedTabs = [];    // Array of { id, url, title, favicon }
+let savedFolder = [];
 let toastTimer = null;
+let selectedFolderValue = null;
+let selectedFolderSavedTabs = []
 
 // ─── STORAGE ──────────────────────────────────────
 
 async function load() {
   return new Promise(resolve => {
-    chrome.storage.local.get([STORAGE_KEY], result => {
-      savedTabs = result[STORAGE_KEY] || [];
-      resolve(savedTabs);
+    chrome.storage.local.get([URL_STORAGE_KEY, FOLDER_STORAGE_KEY], result => {
+      savedTabs = result[URL_STORAGE_KEY] || [];
+      savedFolder = result[FOLDER_STORAGE_KEY] || [];
+      resolve({ savedTabs, savedFolder });
     });
   });
 }
 
 async function save() {
   return new Promise(resolve => {
-    chrome.storage.local.set({ [STORAGE_KEY]: savedTabs }, resolve);
+    savedFolder.sort((a, b) => a.title.localeCompare(b.title));
+    chrome.storage.local.set({ [URL_STORAGE_KEY]: savedTabs, [FOLDER_STORAGE_KEY]: savedFolder }, resolve);
   });
 }
 
@@ -41,26 +53,65 @@ async function save() {
 
 function render() {
   // Update count badge
-  tabCount.textContent = `${savedTabs.length} saved`;
+  selectedFolderSavedTabs = savedTabs.filter(tab => tab.folderId == selectedFolderValue)
+  tabCount.textContent = `${selectedFolderSavedTabs.length} url`;
+  folderCount.textContent = `${savedFolder.length} folder`;
 
   // Show/hide list header
-  listHeader.style.display = savedTabs.length > 0 ? 'flex' : 'none';
+  listHeader.style.display = selectedFolderSavedTabs.length > 0 || savedFolder.length > 0 ? 'flex' : 'none';
 
   // Clear existing items (keep emptyState)
   const items = urlList.querySelectorAll('.url-item');
   items.forEach(el => el.remove());
 
-  if (savedTabs.length === 0) {
+  if (selectedFolderSavedTabs.length === 0) {
     emptyState.style.display = 'flex';
     return;
   }
 
   emptyState.style.display = 'none';
 
-  savedTabs.forEach(tab => {
+  selectedFolderSavedTabs.forEach(tab => {
     const item = createItem(tab);
     urlList.appendChild(item);
   });
+}
+
+async function renderOptions(newFolder = {}) {
+  dropdown.innerHTML = "";
+
+  if (savedFolder.length == 0) {
+    const div = document.createElement("div");
+    div.textContent = "--No option--";
+    selected.textContent = "Select Folder"
+    selectedFolderValue = null
+    dropdown.appendChild(div);
+  } else {
+    savedFolder.forEach((item, index) => {
+      const div = document.createElement("div");
+      div.textContent = item.name;
+
+      div.onclick = () => {
+        selectedFolderValue = item.id;
+
+        selected.textContent = (item.name.length > 30) ? item.name.substring(0, 30) + "..." : item.name;
+
+        dropdown.style.display = "none";
+        render();
+      };
+
+      dropdown.appendChild(div);
+    });
+  }
+
+  // ✅ Auto select first item
+  if (savedFolder.length > 0) {
+    selectedFolderValue = newFolder.id || savedFolder[0].id;
+    let tempTextContent = newFolder.name || savedFolder[0].name
+    selected.textContent = (tempTextContent.length > 30) ? tempTextContent.substring(0, 30) + "..." : tempTextContent;
+  }
+
+  btnRemoveFolder.style.display = selectedFolderValue ? "block" : "none"
 }
 
 function createItem(tab) {
@@ -117,6 +168,27 @@ function createItem(tab) {
 
 // ─── ACTIONS ──────────────────────────────────────
 
+async function addFolder(folderName) {
+
+  // Prevent duplicates
+  if (savedFolder.find(t => t.title === folderName)) {
+    showToast('Folder already Exist!', 'error');
+    return;
+  }
+
+  const newFolder = {
+    id: Date.now().toString(),
+    title: folderName.toLowerCase(),
+    name: capitalizeEveryWord(folderName)
+  };
+
+  savedFolder.push(newFolder);
+  await save();
+  await renderOptions(newFolder);
+  render();
+  showToast('Folder saved!', 'success');
+}
+
 async function addTab(url, title = '', favicon = '', id = '') {
   url = normalizeUrl(url);
   if (!isValidUrl(url)) {
@@ -124,17 +196,24 @@ async function addTab(url, title = '', favicon = '', id = '') {
     return;
   }
 
+  if (!selectedFolderValue) {
+    showToast('select folder', 'error');
+    return;
+  }
+
   // Prevent duplicates
-  if (savedTabs.find(t => t.url === url)) {
+  if (savedTabs.find(t => t.url === url && t.folderId == selectedFolderValue)) {
     showToast('URL already saved!', 'error');
     return;
   }
 
   const newTab = {
+
     id: id || Date.now().toString(),
     url,
     title: title || getHostname(url),
-    favicon
+    favicon,
+    folderId: selectedFolderValue
   };
 
   savedTabs.push(newTab);
@@ -159,21 +238,34 @@ async function removeTab(id) {
   showToast('Removed', 'success');
 }
 
-async function openAllTabs() {
-  if (savedTabs.length === 0) return;
+async function removeFolder(id) {
+  savedTabs = savedTabs.filter(tab => tab.folderId != id);
+  savedFolder = savedFolder.filter(folder => folder.id != id)
+  await save();
+  await renderOptions()
+  render();
+  console.log(savedTabs);
+  console.log(savedFolder)
+  showToast('Removed', 'success');
+}
 
-  for (const tab of savedTabs) {
+async function openAllTabs() {
+  selectedFolderSavedTabs = savedTabs.filter(tab => tab.folderId == selectedFolderValue)
+  if (selectedFolderSavedTabs.length === 0) return;
+
+  for (const tab of selectedFolderSavedTabs) {
     chrome.tabs.create({ url: tab.url, active: false });
     await wait(80); // slight stagger to avoid browser choking
   }
 
-  showToast(`Opened ${savedTabs.length} tab${savedTabs.length > 1 ? 's' : ''}!`, 'success');
+  showToast(`Opened ${selectedFolderSavedTabs.length} tab${selectedFolderSavedTabs.length > 1 ? 's' : ''}!`, 'success');
 }
 
 async function clearAll() {
-  if (savedTabs.length === 0) return;
-  const count = savedTabs.length;
-  savedTabs = [];
+  selectedFolderSavedTabs = savedTabs.filter(tab => tab.folderId == selectedFolderValue)
+  if (selectedFolderSavedTabs.length === 0) return;
+  const count = selectedFolderSavedTabs.length;
+  savedTabs = savedTabs.filter(tab => tab.folderId != selectedFolderValue);
   await save();
   render();
   showToast(`Cleared ${count} tab${count > 1 ? 's' : ''}`, 'success');
@@ -189,7 +281,6 @@ addCurrentBtn.addEventListener('click', async () => {
 });
 addAllBtn.addEventListener('click', async () => {
   const tabs = await chrome.tabs.query({});
-  console.log(tabs)
   tabs.forEach(async (tab) => {
     if (tab && tab.url) {
       await addTab(tab.url, tab.title, tab.favIconUrl || '', tab.id);
@@ -197,6 +288,23 @@ addAllBtn.addEventListener('click', async () => {
   })
 
 });
+
+addFolderBtn.addEventListener('click', async () => {
+  const folderName = folderInput.value.trim();
+  if (folderName) {
+    const isValidFolder = validateFolderName(folderName);
+    if (isValidFolder) {
+      await addFolder(folderName);
+      folderInput.value = '';
+    }
+
+  }
+});
+
+btnRemoveFolder.addEventListener('click', async () => {
+  if (!selectedFolderValue) return;
+  removeFolder(selectedFolderValue);
+})
 
 addUrlBtn.addEventListener('click', async () => {
   const url = urlInput.value.trim();
@@ -219,9 +327,23 @@ urlInput.addEventListener('keydown', async (e) => {
 openAllBtn.addEventListener('click', openAllTabs);
 
 clearAllBtn.addEventListener('click', async () => {
-  if (savedTabs.length === 0) return;
-  const confirmed = confirm(`Remove all ${savedTabs.length} saved tabs?`);
+  selectedFolderSavedTabs = savedTabs.filter(tab => tab.folderId == selectedFolderValue)
+  if (selectedFolderSavedTabs.length === 0) return;
+  const confirmed = confirm(`Remove all ${selectedFolderSavedTabs.length} saved tabs?`);
   if (confirmed) clearAll();
+});
+
+// Toggle dropdown
+selected.addEventListener("click", () => {
+  dropdown.style.display =
+    dropdown.style.display === "block" ? "none" : "block";
+});
+
+// Close on outside click
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("selectBox").contains(e.target)) {
+    dropdown.style.display = "none";
+  }
 });
 
 // ─── UTILS ────────────────────────────────────────
@@ -272,9 +394,30 @@ function showToast(msg, type = '') {
   }, 2000);
 }
 
+function validateFolderName(folderName) {
+  folderName = folderName.trim()
+  var re = /^[^\s^\x00-\x1f\\?*:"";<>|\/.][^\x00-\x1f\\?*:"";<>|\/]*[^\s^\x00-\x1f\\?*:"";<>|\/.]+$/gm
+    ;
+  if (!re.test(folderName)) {
+    showToast('Error: Input contains invalid characters!', 'error');
+    return false;
+  }
+  // validation was successful
+  return true;
+}
+
+function capitalizeEveryWord(str) {
+  // Convert the whole string to lowercase first for consistency
+  return str.toLowerCase().split(' ').map(function (word) {
+    // Capitalize the first character and add the rest of the word
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' '); // Join the words back with a space
+}
+
 // ─── INIT ─────────────────────────────────────────
 
 (async () => {
-  await load();
+  const test = await load();
+  await renderOptions();
   render();
 })();

@@ -48,11 +48,57 @@
           </svg>
           <span class="logo-text">TabStash</span>
         </div>
-        <div class="tab-count" id="tabCount">0 saved</div>
+        <div class="folder-count" id="folderCount">0 folder</div>
+        <div class="tab-count" id="tabCount">0 url</div>
       </header>
 
       <!-- Add current tab -->
+
       <div class="add-section">
+        <div class="select-box" id="selectBox">
+          <div class="selected" id="selected">Select Folder</div>
+          <button
+            class="btn-remove-folder"
+            id="btnRemoveFolder"
+            title="Remove folder"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path
+                d="M1 1l8 8M9 1L1 9"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <div class="dropdown" id="dropdown"></div>
+        </div>
+        <div class="manual-folder-input">
+          <input
+            type="text"
+            id="folderInput"
+            class="folder-input"
+            placeholder="Folder name"
+          />
+          <button class="btn-add-folder" id="addFolderBtn" title="Add Folder">
+            <svg
+              class="w-[24px] h-[24px] text-gray-800 dark:text-white"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5 4a2 2 0 0 0-2 2v1h10.968l-1.9-2.28A2 2 0 0 0 10.532 4H5ZM3 19V9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm9-8.5a1 1 0 0 1 1 1V13h1.5a1 1 0 1 1 0 2H13v1.5a1 1 0 1 1-2 0V15H9.5a1 1 0 1 1 0-2H11v-1.5a1 1 0 0 1 1-1Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+
         <div class="btn-add">
           <button class="btn-add-current" id="addCurrentTab">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

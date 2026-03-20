@@ -69,7 +69,8 @@ body {
   color: var(--text);
 }
 
-.tab-count {
+.tab-count,
+.folder-count {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--accent);
@@ -98,11 +99,10 @@ body {
   gap: 7px;
   background: #007bff;
   color: #fff;
-  border: none;
+  border: 1px solid var(--bg);
   border-radius: var(--radius);
   padding: 9px 14px;
   font-family: var(--font-display);
-  font-weight: bold;
   font-size: 14px;
   letter-spacing: 0.3px;
   cursor: pointer;
@@ -117,11 +117,10 @@ body {
   gap: 7px;
   background: var(--surface2);
   color: #fff;
-  border: none;
+  border: 1px solid var(--bg);
   border-radius: var(--radius);
   padding: 9px 14px;
   font-family: var(--font-display);
-  font-weight: bold;
   font-size: 14px;
   letter-spacing: 0.3px;
   cursor: pointer;
@@ -175,20 +174,26 @@ body {
   right: 0;
 }
 
-.manual-input {
+.manual-input,
+.manual-folder-input {
   display: flex;
   gap: 6px;
 }
 
-.url-input {
+.manual-folder-input {
+  padding: 4px 0px;
+}
+
+.url-input,
+.folder-input {
   flex: 1;
-  background: #ccc;
+  background: #fff;
   border: 1px solid var(--bg);
   border-radius: var(--radius);
   padding: 8px 10px;
   color: #000;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -201,7 +206,8 @@ body {
   border-color: #0d6efd;
 }
 
-.btn-add-url {
+.btn-add-url,
+.btn-add-folder {
   background: var(--surface2);
   border: 1px solid var(--bg);
   border-radius: var(--radius);
@@ -267,17 +273,19 @@ body {
 }
 
 .btn-open-all:hover {
-  background: #5eb45e;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .btn-clear-all {
-  background: #ca0505;
+  background: var(--red);
   color: #fff;
   border-color: var(--bg);
 }
 
 .btn-clear-all:hover {
-  background: #be2525;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* ─── URL LIST ────────────────────────────── */
@@ -455,13 +463,13 @@ body {
 
 /* ─── TOAST ───────────────────────────────── */
 .toast {
+  color: #052c65;
+  background: #cfe2ff;
+  border: #9ec5fe;
   position: absolute;
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%) translateY(8px);
-  background: #1aa073;
-  border: 1px solid var(--border);
-  color: #fff;
   font-size: 11px;
   font-family: var(--font-mono);
   padding: 6px 14px;
@@ -481,10 +489,82 @@ body {
 }
 
 .toast.success {
-  border-color: rgba(46, 213, 115, 0.4);
-  color: #fff;
+  border-color: #a3cfbb;
+  background: #d1e7dd;
+  color: #0a3622;
 }
 .toast.error {
-  border-color: #f53e4d66;
-  color: #be2525;
+  border-color: #f1aeb5;
+  background: #f8d7da;
+  color: #58151c;
+}
+
+/* ---------------select folder-------------- */
+.select-box {
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--bg);
+  padding-bottom: 12px;
+  align-items: center;
+}
+
+.selected {
+  position: relative;
+  padding: 5px;
+  background: #ccc;
+  border: 1px solid var(--bg);
+  border-radius: var(--radius);
+  width: 88.3%;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  float: inline-start;
+}
+
+.dropdown {
+  position: absolute;
+  width: 81.1%;
+  border: 1px solid var(--bg);
+  border-radius: var(--radius);
+  background: #ccc;
+  display: none;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10;
+  font-size: 13px;
+  margin-top: 36px;
+}
+
+.btn-add-folder:hover,
+.btn-remove-folder:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.dropdown div {
+  padding: 5px;
+}
+
+.dropdown div:hover {
+  background: #f0f0f0;
+}
+
+.btn-remove-folder {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  flex-shrink: 0;
+  background: var(--red);
+  border: 1px solid var(--bg);
+  border-radius: var(--radius);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  display: inline;
+  float: inline-end;
 }
